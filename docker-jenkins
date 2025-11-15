@@ -1,0 +1,45 @@
+pipeline {
+  agent any
+
+  environment {
+    DOCKERHUB_REPO = 'nagendrappa1/jenkins'        // <username>/<repo> on Docker Hub
+    IMAGE_TAG      = "${env.BUILD_NUMBER}"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        // Explicitly checkout your GitHub repo
+        checkout([$class: 'GitSCM',
+          branches: [[name: '*/main']],   // change to */master if needed
+          userRemoteConfigs: [[url: 'https://github.com/Nagendrappa/kubernetes.git']]
+        ])
+      }
+    }
+
+    stage('Build Docker image') {
+      steps {
+        sh "docker build -t ${DOCKERHUB_REPO}:${IMAGE_TAG} -t ${DOCKERHUB_REPO}:latest ."
+      }
+    }
+
+    stage('Push to Docker Hub') {
+      steps {
+        // Store your Docker Hub creds in Jenkins (ID: docker-push)
+        withCredentials([usernamePassword(credentialsId: 'docker_login', usernameVariable: 'DH_USER', passwordVariable: 'DH_PASS')]) {
+          sh """
+            echo "\$DH_PASS" | docker login -u "\$DH_USER" --password-stdin
+            docker push ${DOCKERHUB_REPO}:${IMAGE_TAG}
+            docker push ${DOCKERHUB_REPO}:latest
+          """
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "Pushed: ${DOCKERHUB_REPO}:${IMAGE_TAG} and :latest"
+    }
+  }
+}
