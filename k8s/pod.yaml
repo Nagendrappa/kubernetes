@@ -1,14 +1,15 @@
-apiVersion: apps/v1
-kind : Namespace
+apiVersion: v1
+kind: Pod
 metadata:
-  name: dev
+  name: webapp-pod
+  namespace: dev
   labels:
     app: webapp
 spec:
-  containers: 
+  containers:
     - name: webapp-pod
       image: nagendrappa1/jenkins
-      ports: 
+      ports:
         - containerPort: 80
         
 
