@@ -1,7 +1,7 @@
 apiVersion: apps/v1
-kind : Pod
+kind : Namespace
 metadata:
-  name: webapp-pod
+  name: dev
   labels:
     app: webapp
 spec:
