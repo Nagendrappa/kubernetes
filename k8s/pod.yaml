@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind : Pod
+metadata:
+  name: webapp-pod
+  labels:
+    app: webapp
+spec:
+  containers: 
+    - name: webapp-pod
+      image: nagendrappa1/jenkins
+      ports: 
+        - containerPort: 80
+        
+
+  
+
+
+
+
+
+
+

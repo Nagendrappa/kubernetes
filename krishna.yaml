@@ -1,0 +1,44 @@
+pipeline {
+  agent any
+
+  environment {
+    DOCKERHUB_REPO = 'nagendrappa1/jenkins'
+    IMAGE_TAG      = 'latest'  // or use a specific tag like '42'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout([$class: 'GitSCM',
+          branches: [[name: '*/main']],
+          userRemoteConfigs: [[url: 'https://github.com/Nagendrappa/kubernetes.git']]
+        ])
+      }
+    }
+
+    stage('Deploy to Minikube with 4 Replicas') {
+      steps {
+        withCredentials([file(credentialsId: 'minikube', variable: 'KCFG')]) {
+          sh '''
+            export KUBECONFIG="$KCFG"
+
+            echo "Updating nginx.yaml with image and replicas..."
+            sed -i "s|image: .*|image: ${DOCKERHUB_REPO}:${IMAGE_TAG}|g" nginx.yaml
+            sed -i "s|replicas: .*|replicas: 4|g" nginx.yaml
+
+            echo "Deploying to Minikube..."
+            kubectl apply -f nginx.yaml
+            kubectl rollout status deployment/nginx-deployment
+            kubectl get pods -l app=nginx
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "✅ Deployed 3 replicas of ${DOCKERHUB_REPO}:${IMAGE_TAG} to Minikube"
+    }
+  }
+}
